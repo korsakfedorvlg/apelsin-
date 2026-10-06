@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>АПЕЛЬСИН — панель управления</title>
+  <style>
+    :root{--orange:#ff6a21;--ink:#171717;--muted:#756e68;--cream:#fffaf6;--line:#e9e1db;--soft:#f5eee9;--dark:#232120;--danger:#b52828;--shadow:0 18px 60px rgba(44,31,22,.08)}
+    *{box-sizing:border-box}html,body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}button,input,textarea,select{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}:focus-visible{outline:3px solid rgba(255,106,33,.28);outline-offset:2px}
+    .admin-shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+    .sidebar{position:sticky;top:0;height:100vh;background:var(--dark);color:#fff;padding:22px 14px;display:flex;flex-direction:column}
+    .side-brand{display:flex;align-items:center;gap:10px;padding:4px 6px 22px}.side-brand .bm{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ff9b61,#ff6a21);font-weight:1000;color:#fff}
+    .side-brand strong{display:block;font-size:13px;letter-spacing:.12em}.side-brand small{color:#a9a39d;font-size:10px}
+    .side-nav{display:grid;gap:4px;overflow:auto;flex:1}
+    .side-link{display:block;border:0;background:transparent;color:#bbb4ae;padding:10px 12px;border-radius:12px;text-align:left;font-weight:700;font-size:12.5px;cursor:pointer}
+    .side-link:hover{background:#302e2d;color:#fff}.side-link.active{background:rgba(255,106,33,.18);color:#fff}
+    .side-footer{margin-top:12px;display:grid;gap:8px;padding-top:14px}
+    .side-footer button,.side-footer a{border:1px solid #3c3937;background:#2b2927;color:#fff;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:800;text-align:center}
+    .side-footer button:hover{border-color:#615b56}
+    .main{min-width:0}
+    .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 30px;background:rgba(255,250,246,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);flex-wrap:wrap}
+    .topbar h2{margin:0;font-size:22px;letter-spacing:-.03em}.topbar .kicker{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--orange);font-weight:950}
+    .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .admin-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;padding:10px 14px;font-size:12px;font-weight:850;transition:.15s;white-space:nowrap;cursor:pointer}
+    .admin-btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(32,24,19,.08)}
+    .admin-btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+    .admin-btn.danger{border-color:#e6c5c5;color:var(--danger);background:#fff7f7}
+    .admin-btn.ghost{background:rgba(255,255,255,.7)}
+    .import-label{position:relative;overflow:hidden}.import-label input{position:absolute;inset:0;opacity:0;cursor:pointer}
+    .saved-indicator{font-size:11px;color:#b7aea6;opacity:0;transition:.2s}.saved-indicator.show{opacity:1;color:var(--orange)}
+    .content-area{padding:26px 30px 80px;max-width:1100px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 8px 30px rgba(32,24,19,.04);margin-bottom:20px;scroll-margin-top:80px}
+    .card h3{margin:0 0 6px;font-size:18px}
+    .card .hint{color:var(--muted);font-size:12px;margin-bottom:16px}
+    .field{display:grid;gap:6px;margin-bottom:12px}
+    .field>span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8f8780;font-weight:900}
+    .field input,.field textarea,.field select{width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px;color:var(--ink);outline:none}
+    .field textarea{resize:vertical;line-height:1.55;min-height:80px}
+    .field input:focus,.field textarea:focus{border-color:var(--orange);box-shadow:0 0 0 4px rgba(255,106,33,.08)}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .item{border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;background:#fffdfb}
+    .item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+    .item-head strong{font-size:13px}
+    .btn-sm{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}
+    .btn-sm.del{border-color:#efd2d2;color:var(--danger);background:#fff7f7}
+    .img-row{display:flex;gap:10px;align-items:center}
+    .img-prev{width:80px;height:60px;border-radius:12px;background:var(--soft);overflow:hidden;flex:none}
+    .img-prev img{width:100%;height:100%;object-fit:cover}
+    .stack{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .add-btn{border:1px dashed #d9cbc2;background:#fffaf7;color:var(--orange);border-radius:14px;padding:12px;font-weight:850;font-size:12px;width:100%;text-align:center;cursor:pointer}
+    .add-btn:hover{border-color:var(--orange)}
+    .toast{position:fixed;right:20px;bottom:20px;z-index:200;background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:12px;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none}.toast.show{opacity:1;transform:none}
+    @media (max-width:860px){.admin-shell{grid-template-columns:1fr}.sidebar{position:static;height:auto}.side-nav{display:flex;overflow:auto}.side-link{white-space:nowrap}.content-area{padding:16px}.grid-2,.grid-3{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <span class="bm">A</span>
+      <div><strong>АПЕЛЬСИН</strong><small>admin panel</small></div>
+    </div>
+    <nav class="side-nav" id="sideNav"></nav>
+    <div class="side-footer">
+      <a href="index.html" target="_blank" rel="noopener">Открыть сайт ↗</a>
+      <button type="button" id="resetAll">Сбросить всё</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="kicker">редактор сайта</div>
+        <h2>Всё содержимое — здесь</h2>
+      </div>
+      <div class="top-actions">
+        <span class="saved-indicator" id="savedIndicator">Сохранено</span>
+        <button class="admin-btn ghost" id="exportBtn" type="button">Экспорт JSON</button>
+        <label class="admin-btn ghost import-label">Импорт JSON<input type="file" id="importFile" accept=".json,application/json"></label>
+        <button class="admin-btn primary" id="saveBtn" type="button">Сохранить</button>
+      </div>
+    </div>
+    <div class="content-area" id="formArea"></div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="content-store.js"></script>
+<script>
+(function () {
+  const data = ContentStore.get();
+
+  const SCHEMA = [
+    { key: 'meta', title: 'SEO', icon: '🔎', fields: [
+      { k: 'title', t: 'text', l: 'Title страницы' },
+      { k: 'description', t: 'textarea', l: 'Meta description' }
+    ]},
+    { key: 'hero', title: 'Hero (главный экран)', icon: '🏠', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'titleHtml', t: 'html', l: 'Заголовок (можно <em>текст</em>)' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' },
+      { k: 'primaryLabel', t: 'text', l: 'Кнопка 1 — текст' },
+      { k: 'secondaryLabel', t: 'text', l: 'Кнопка 2 — текст' },
+      { k: 'micro', t: 'text', l: 'Микротекст под кнопками' },
+      { k: 'noteLabel', t: 'text', l: 'Плашка — подпись' },
+      { k: 'noteValue', t: 'text', l: 'Плашка — значение' },
+      { k: 'imageMain', t: 'image', l: 'Главное фото' },
+      { k: 'imageMainAlt', t: 'text', l: 'Alt главного фото' },
+      { k: 'imageTop', t: 'image', l: 'Фото справа сверху' },
+      { k: 'imageTopAlt', t: 'text', l: 'Alt' },
+      { k: 'imageBottom', t: 'image', l: 'Фото справа снизу' },
+      { k: 'imageBottomAlt', t: 'text', l: 'Alt' }
+    ]},
+    { key: 'benefits', title: 'Преимущества', icon: '★', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' }
+    ], lists: [
+      { k: 'items', l: 'Карточки', fields: [
+        { k: 'num', t: 'text', l: 'Номер' },
+        { k: 'title', t: 'text', l: 'Заголовок' },
+        { k: 'text', t: 'textarea', l: 'Текст' }
+      ]}
+    ]},
+    { key: 'directions', title: 'Направления', icon: '🏋', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' }
+    ], lists: [
+      { k: 'filters', l: 'Фильтры', fields: [
+        { k: 'key', t: 'text', l: 'Код' },
+        { k: 'label', t: 'text', l: 'Название' }
+      ]},
+      { k: 'items', l: 'Карточки направлений', fields: [
+        { k: 'cat', t: 'text', l: 'Категория (strength / mobility / mind)' },
+        { k: 'title', t: 'text', l: 'Название' },
+        { k: 'desc', t: 'textarea', l: 'Описание' },
+        { k: 'duration', t: 'text', l: 'Длительность' },
+        { k: 'level', t: 'text', l: 'Уровень' },
+        { k: 'img', t: 'image', l: 'Фото' },
+        { k: 'pos', t: 'text', l: 'object-position (напр. 50% 50%)' }
+      ]}
+    ]},
+    { key: 'schedule', title: 'Расписание', icon: '📅', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' }
+    ], dayEditors: true },
+    { key: 'offer', title: 'Блок «Открытый урок»', icon: '⏰', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'text', t: 'textarea', l: 'Текст' },
+      { k: 'primaryLabel', t: 'text', l: 'Кнопка 1' },
+      { k: 'secondaryLabel', t: 'text', l: 'Кнопка 2' },
+      { k: 'date', t: 'text', l: 'Дата и время (ГГГГ-ММ-ДДTЧЧ:ММ:СС)' }
+    ]},
+    { key: 'trainers', title: 'Тренеры', icon: '👥', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' }
+    ], lists: [
+      { k: 'items', l: 'Тренеры', fields: [
+        { k: 'name', t: 'text', l: 'Имя' },
+        { k: 'spec', t: 'text', l: 'Специализация' },
+        { k: 'meta', t: 'text', l: 'Опыт (строка)' },
+        { k: 'quote', t: 'textarea', l: 'Цитата' },
+        { k: 'img', t: 'image', l: 'Фото' },
+        { k: 'pos', t: 'text', l: 'object-position' }
+      ]}
+    ]},
+    { key: 'about', title: 'О студии', icon: 'ℹ', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'text1', t: 'textarea', l: 'Абзац 1' },
+      { k: 'text2', t: 'textarea', l: 'Абзац 2' }
+    ], lists: [
+      { k: 'stats', l: 'Статистика', fields: [
+        { k: 'value', t: 'number', l: 'Значение' },
+        { k: 'label', t: 'text', l: 'Подпись' }
+      ]},
+      { k: 'images', l: 'Галерея (3 фото)', fields: [
+        { k: 'src', t: 'image', l: 'Фото' },
+        { k: 'alt', t: 'text', l: 'Alt' },
+        { k: 'pos', t: 'text', l: 'object-position' }
+      ]}
+    ]},
+    { key: 'reviews', title: 'Отзывы (карусель)', icon: '💬', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' }
+    ], lists: [
+      { k: 'items', l: 'Отзывы', fields: [
+        { k: 'name', t: 'text', l: 'Имя' },
+        { k: 'sub', t: 'text', l: 'Подпись (направление, стаж)' },
+        { k: 'initials', t: 'text', l: 'Инициалы (для аватара)' },
+        { k: 'text', t: 'textarea', l: 'Текст отзыва' }
+      ]}
+    ]},
+    { key: 'pricing', title: 'Абонементы', icon: '💳', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' }
+    ], lists: [
+      { k: 'items', l: 'Тарифы', fields: [
+        { k: 'title', t: 'text', l: 'Название' },
+        { k: 'price', t: 'text', l: 'Цена' },
+        { k: 'popular', t: 'bool', l: 'Отметить «популярный»' }
+      ], extra: [
+        { k: 'features', t: 'strlist', l: 'Что входит (по строке)' }
+      ]}
+    ]},
+    { key: 'faq', title: 'FAQ', icon: '❓', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' }
+    ], lists: [
+      { k: 'items', l: 'Вопросы', fields: [
+        { k: 'q', t: 'text', l: 'Вопрос' },
+        { k: 'a', t: 'textarea', l: 'Ответ' }
+      ]}
+    ]},
+    { key: 'contacts', title: 'Контакты', icon: '📍', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'sub', t: 'textarea', l: 'Подзаголовок' },
+      { k: 'phone', t: 'text', l: 'Телефон' },
+      { k: 'email', t: 'text', l: 'Email' },
+      { k: 'hours', t: 'textarea', l: 'Режим работы (с новой строки)' },
+      { k: 'routeLabel', t: 'text', l: 'Кнопка «Маршрут»' },
+      { k: 'address', t: 'text', l: 'Адрес студии' },
+      { k: 'yandexOrgId', t: 'text', l: 'ID организации на Яндекс.Картах (только цифры)' }
+    ], lists: [
+      { k: 'socials', l: 'Соцсети', fields: [
+        { k: 'label', t: 'text', l: 'Надпись' },
+        { k: 'href', t: 'text', l: 'Ссылка' }
+      ]}
+    ]},
+    { key: 'finalCta', title: 'Финальный призыв', icon: '🚀', fields: [
+      { k: 'kicker', t: 'text', l: 'Надзаголовок' },
+      { k: 'title', t: 'text', l: 'Заголовок' },
+      { k: 'text', t: 'textarea', l: 'Текст' },
+      { k: 'btnLabel', t: 'text', l: 'Кнопка' }
+    ]},
+    { key: 'footer', title: 'Футер', icon: '⬇', fields: [
+      { k: 'note', t: 'textarea', l: 'Описание' },
+      { k: 'copyright', t: 'text', l: 'Копирайт' }
+    ]}
+  ];
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200); };
+  const escapeAttr = (s) => String(s == null ? '' : s).replace(/"/g, '&quot;');
+
+  function buildNav() {
+    const nav = $('#sideNav');
+    SCHEMA.forEach((sec, i) => {
+      const b = document.createElement('button');
+      b.className = 'side-link' + (i === 0 ? ' active' : '');
+      b.type = 'button';
+      b.dataset.target = 'sec-' + sec.key;
+      b.textContent = (sec.icon ? sec.icon + '  ' : '') + sec.title;
+      b.onclick = () => {
+        $$('.side-link').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const el = document.getElementById('sec-' + sec.key);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      nav.appendChild(b);
+    });
+  }
+
+  function fieldHtml(path, f, value) {
+    const attr = `data-path="${path}"`;
+    const v = value == null ? '' : value;
+    if (f.t === 'textarea' || f.t === 'html') {
+      return `<div class="field"><span>${f.l}</span><textarea ${attr} rows="3">${String(v).replace(/</g, '&lt;').replace(/&(?!lt;|gt;|amp;|quot;|#)/g, '&amp;')}</textarea></div>`;
+    }
+    if (f.t === 'image') {
+      const has = typeof v === 'string' && v;
+      return `<div class="field">
+        <span>${f.l}</span>
+        <div class="img-row">
+          <div class="img-prev">${has ? `<img src="${escapeAttr(v)}" alt="">` : ''}</div>
+          <div style="flex:1;display:grid;gap:6px">
+            <input type="text" ${attr} value="${escapeAttr(v)}" placeholder="URL или загрузите файл">
+            <div class="stack">
+              <label class="btn-sm" style="cursor:pointer">Загрузить<input type="file" accept="image/*" style="display:none" data-upload="${path}"></label>
+              <button class="btn-sm del" type="button" data-clear="${path}">Удалить фото</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+    if (f.t === 'bool') {
+      return `<div class="field"><span>${f.l}</span><label style="display:flex;gap:8px;align-items:center;font-size:13px">
+        <input type="checkbox" ${attr} ${v ? 'checked' : ''}> Да</label></div>`;
+    }
+    if (f.t === 'number') {
+      return `<div class="field"><span>${f.l}</span><input type="number" ${attr} value="${escapeAttr(v)}"></div>`;
+    }
+    return `<div class="field"><span>${f.l}</span><input type="text" ${attr} value="${escapeAttr(v)}"></div>`;
+  }
+
+  function strListFieldHtml(path, f, arr) {
+    const lines = (arr || []).join('\n');
+    return `<div class="field"><span>${f.l}</span>
+      <textarea rows="${Math.max(3, (arr || []).length + 1)}" data-strlist="${path}">${lines.replace(/</g, '&lt;')}</textarea>
+      <div style="font-size:11px;color:#999">Одна строка = один пункт</div>
+    </div>`;
+  }
+
+  function sectionHtml(sec) {
+    const body = [];
+    const obj = data[sec.key] || {};
+
+    (sec.fields || []).forEach(f => {
+      body.push(fieldHtml(`${sec.key}.${f.k}`, f, obj[f.k]));
+    });
+
+    (sec.lists || []).forEach(list => {
+      const arr = Array.isArray(obj[list.k]) ? obj[list.k] : [];
+      const rows = arr.map((item, idx) => {
+        const fields = list.fields.map(f => fieldHtml(`${sec.key}.${list.k}.${idx}.${f.k}`, f, item[f.k])).join('');
+        const extra = (list.extra || []).map(f => strListFieldHtml(`${sec.key}.${list.k}.${idx}.${f.k}`, f, item[f.k])).join('');
+        return `<div class="item" data-idx="${idx}">
+          <div class="item-head">
+            <strong>#${idx + 1}</strong>
+            <div class="stack">
+              <button class="btn-sm" type="button" data-move="up" data-list="${sec.key}.${list.k}" data-idx="${idx}">↑</button>
+              <button class="btn-sm" type="button" data-move="down" data-list="${sec.key}.${list.k}" data-idx="${idx}">↓</button>
+              <button class="btn-sm del" type="button" data-del="${sec.key}.${list.k}" data-idx="${idx}">Удалить</button>
+            </div>
+          </div>
+          ${fields}${extra}
+        </div>`;
+      }).join('');
+      body.push(`<h4 style="margin:18px 0 8px;font-size:14px">${list.l}</h4>
+        <div class="list" data-list="${sec.key}.${list.k}">${rows}</div>
+        <button class="add-btn" type="button" data-add="${sec.key}.${list.k}">+ Добавить</button>`);
+    });
+
+    if (sec.dayEditors) {
+      const days = Array.isArray(obj.days) ? obj.days : [];
+      const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+      days.forEach((sessions, d) => {
+        const rows = (sessions || []).map((s, i) => `
+          <div class="item">
+            <div class="item-head">
+              <strong>Тренировка #${i + 1}</strong>
+              <button class="btn-sm del" type="button" data-del-session="${d}" data-idx="${i}">Удалить</button>
+            </div>
+            <div class="grid-3">
+              <div class="field"><span>Время</span><input type="text" data-session="${d}.${i}.time" value="${escapeAttr(s.time)}"></div>
+              <div class="field"><span>Название</span><input type="text" data-session="${d}.${i}.name" value="${escapeAttr(s.name)}"></div>
+              <div class="field"><span>Тренер</span><input type="text" data-session="${d}.${i}.trainer" value="${escapeAttr(s.trainer)}"></div>
+              <div class="field"><span>Длительность</span><input type="text" data-session="${d}.${i}.duration" value="${escapeAttr(s.duration)}"></div>
+              <div class="field"><span>Уровень</span><input type="text" data-session="${d}.${i}.level" value="${escapeAttr(s.level)}"></div>
+              <div class="field"><span>Мест</span><input type="number" data-session="${d}.${i}.spots" value="${escapeAttr(s.spots)}"></div>
+            </div>
+          </div>`).join('');
+        body.push(`<h4 style="margin:18px 0 8px;font-size:14px">${dayNames[d]}</h4>
+          <div>${rows}</div>
+          <button class="add-btn" type="button" data-add-session="${d}">+ Добавить тренировку в ${dayNames[d]}</button>`);
+      });
+    }
+
+    return `<section class="card" id="sec-${sec.key}">
+      <h3>${sec.icon || ''} ${sec.title}</h3>
+      <div class="hint">Изменения применяются после нажатия «Сохранить».</div>
+      ${body.join('')}
+    </section>`;
+  }
+
+  function renderAll() {
+    const area = $('#formArea');
+    area.innerHTML = SCHEMA.map(sectionHtml).join('');
+    bindEvents();
+  }
+
+  function fileToDataURL(file) {
+    return new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result);
+      fr.onerror = rej;
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function bindEvents() {
+    $$('[data-path]').forEach(el => {
+      el.addEventListener('input', () => {
+        setPath(el.dataset.path, el.type === 'checkbox' ? el.checked : el.value);
+      });
+    });
+    $$('[data-strlist]').forEach(el => {
+      el.addEventListener('input', () => {
+        const arr = el.value.split('\n').map(s => s.trim()).filter(Boolean);
+        setPath(el.dataset.strlist, arr);
+      });
+    });
+    $$('[data-session]').forEach(el => {
+      el.addEventListener('input', () => {
+        const [d, i, key] = el.dataset.session.split('.');
+        const val = key === 'spots' ? Number(el.value) : el.value;
+        data.schedule.days[+d][+i][key] = val;
+      });
+    });
+    $$('[data-upload]').forEach(input => {
+      input.addEventListener('change', async () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const url = await fileToDataURL(file);
+        setPath(input.dataset.upload, url);
+        const wrap = input.closest('.field');
+        const prev = wrap.querySelector('.img-prev');
+        prev.innerHTML = `<img src="${url}" alt="">`;
+        const textInput = wrap.querySelector('input[type="text"]');
+        if (textInput) textInput.value = url;
+      });
+    });
+    $$('[data-clear]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = btn.dataset.clear;
+        setPath(p, '');
+        const wrap = btn.closest('.field');
+        wrap.querySelector('.img-prev').innerHTML = '';
+        const textInput = wrap.querySelector('input[type="text"]');
+        if (textInput) textInput.value = '';
+      });
+    });
+    $$('[data-add]').forEach(b => b.addEventListener('click', () => listAdd(b.dataset.add)));
+    $$('[data-del]').forEach(b => b.addEventListener('click', () => listDel(b.dataset.del, +b.dataset.idx)));
+    $$('[data-move]').forEach(b => b.addEventListener('click', () => listMove(b.dataset.list, +b.dataset.idx, b.dataset.move)));
+    $$('[data-add-session]').forEach(b => b.addEventListener('click', () => sessionAdd(+b.dataset.addSession)));
+    $$('[data-del-session]').forEach(b => b.addEventListener('click', () => sessionDel(+b.dataset.delSession, +b.dataset.idx)));
+  }
+
+  function setPath(path, val) {
+    const parts = path.split('.');
+    let cur = data;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const k = parts[i];
+      const nextKey = parts[i + 1];
+      if (Array.isArray(cur)) cur = cur[+k];
+      else {
+        if (cur[k] == null) cur[k] = /^\d+$/.test(nextKey) ? [] : {};
+        cur = cur[k];
+      }
+    }
+    const last = parts[parts.length - 1];
+    if (Array.isArray(cur)) cur[+last] = val; else cur[last] = val;
+  }
+
+  function templateFromSchema(sectionKey, listKey) {
+    const sec = SCHEMA.find(s => s.key === sectionKey);
+    const list = sec.lists.find(l => l.k === listKey);
+    const t = {};
+    list.fields.forEach(f => t[f.k] = f.t === 'bool' ? false : f.t === 'number' ? 0 : '');
+    (list.extra || []).forEach(f => t[f.k] = []);
+    return t;
+  }
+
+  function listAdd(path) {
+    const [sec, list] = path.split('.');
+    if (!data[sec]) data[sec] = {};
+    if (!Array.isArray(data[sec][list])) data[sec][list] = [];
+    data[sec][list].push(templateFromSchema(sec, list));
+    renderAll();
+  }
+  function listDel(path, idx) {
+    const [sec, list] = path.split('.');
+    if (!confirm('Удалить этот элемент?')) return;
+    data[sec][list].splice(idx, 1);
+    renderAll();
+  }
+  function listMove(path, idx, dir) {
+    const [sec, list] = path.split('.');
+    const arr = data[sec][list];
+    const j = dir === 'up' ? idx - 1 : idx + 1;
+    if (j < 0 || j >= arr.length) return;
+    [arr[idx], arr[j]] = [arr[j], arr[idx]];
+    renderAll();
+  }
+
+  function sessionAdd(d) {
+    if (!data.schedule.days[d]) data.schedule.days[d] = [];
+    data.schedule.days[d].push({ time: '10:00', name: 'Новая тренировка', trainer: '', duration: '60 мин', level: 'любой', spots: 8 });
+    renderAll();
+  }
+  function sessionDel(d, i) {
+    if (!confirm('Удалить эту тренировку?')) return;
+    data.schedule.days[d].splice(i, 1);
+    renderAll();
+  }
+
+  function flashSaved() {
+    const el = $('#savedIndicator');
+    el.classList.add('show');
+    clearTimeout(flashSaved._t);
+    flashSaved._t = setTimeout(() => el.classList.remove('show'), 1600);
+  }
+
+  $('#saveBtn').onclick = () => {
+    ContentStore.save(data);
+    flashSaved();
+    toast('Сохранено');
+  };
+  $('#resetAll').onclick = () => {
+    if (!confirm('Сбросить все данные к заводским?')) return;
+    ContentStore.reset();
+    location.reload();
+  };
+  $('#exportBtn').onclick = () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'apelsin-content.json';
+    a.click();
+  };
+  $('#importFile').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const txt = await file.text();
+      const parsed = JSON.parse(txt);
+      Object.assign(data, ContentStore.deepMerge(ContentStore.clone(), parsed));
+      ContentStore.save(data);
+      renderAll();
+      toast('Импортировано и сохранено');
+    } catch (err) { alert('Не удалось прочитать файл'); }
+  };
+
+  buildNav();
+  renderAll();
+})();
+</script>
+</body>
+</html>
